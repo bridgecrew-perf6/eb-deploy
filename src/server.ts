@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import bodyParser from "body-parser";
 import { filterImageFromURL, deleteLocalFiles } from "./util/util";
 
@@ -28,20 +28,25 @@ import { filterImageFromURL, deleteLocalFiles } from "./util/util";
 
   /**************************************************************************** */
 
-  app.get("/filteredimage", async (req, res) => {
-    const imageUrl: string = req.query.image_url;
-    if (imageUrl == null || imageUrl == "") {
-      res.send("Please enter the image url");
+  app.get("/filteredimage", async (req: Request, res: Response) => {
+    try {
+      const imageUrl: string = req.query.image_url;
+      if (imageUrl == null || imageUrl == "") {
+        res.send("Please enter the image url");
+      }
+      const filteredpath = await filterImageFromURL(imageUrl);
+      res.status(200).sendFile(filteredpath, () => {
+        deleteLocalFiles([filteredpath]);
+      });
+    } catch (e) {
+      res.status(500).send("System errors");
     }
-    const filteredpath = await filterImageFromURL(imageUrl);
-    await deleteLocalFiles([filteredpath]);
-    res.send("Image Url" + filteredpath);
   });
   //! END @TODO1
 
   // Root Endpoint
   // Displays a simple message to the user
-  app.get("/", async (req, res) => {
+  app.get("/", async (req: Request, res: Response) => {
     res.send("try GET /filteredimage?image_url={{}}");
   });
 
